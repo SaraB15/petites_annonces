@@ -6,7 +6,7 @@ function connect() {
     $hostname = 'localhost'; // adresse serveur
 
     // nom de la base de données
-    $dbname = 'Petites_annonces';
+    $dbname = 'petites_annonces';
 
     // identifiant et mot de passe de connexion à la BDD
     $username = 'root'; // VOIR SUR XAMP comment je suis connectée avec avec l'ordinateur 
@@ -17,7 +17,9 @@ function connect() {
 
     // Tentative de connexion avec levée d'une exception en cas de problème
     try{
+      echo 'Connexion réussie';
       return new PDO($dsn, $username, $password);
+      
     } catch (Exception $e){ // si il ny arrive pas il leve une exception qu on met dans la varible $e 
       echo $e->getMessage(); // affiche un message à la base de donnee
     }
@@ -74,23 +76,23 @@ function getUserById($id) {
 function addUser() {
     $email=filter_var(filter_input(INPUT_POST, "email", FILTER_SANITIZE_EMAIL), FILTER_VALIDATE_EMAIL);// FILTRE adresse email, email n'existe pas il a le droit de s'inscrire
     if(!getUserByEmail($email)){
-        if ((!isset($_POST["Nom"] ))||(!isset($_POST['pwd']))||(!isset($_POST['Prenom']))||(!isset($_POST['Adresse_postale']))||(!isset($_POST['code_postale']))||(!isset( $_POST['N_de_telephone']))||(!isset( $_POST['Date_de_naissance']))||(!isset( $_POST['Sexe']))||(!isset( $_POST['Ville']))) return array ("error", "tous les champs sont requis");
+        if ((!isset($_POST['nom'] ))||(!isset($_POST['pwd']))||(!isset($_POST['prenom']))||(!isset($_POST['adresse_postale']))||(!isset($_POST['code_postale']))||(!isset( $_POST['n_de_telephone']))||(!isset( $_POST['date_de_naissance']))||(!isset( $_POST['sexe']))||(!isset( $_POST['ville']))) return array ("error", "tous les champs sont requis enregistrement");
         if ($_POST['pwd']===$_POST['pwd2']){
             if(preg_match("/^(?=.*\d)(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[\W]).{8,}$/", $_POST['pwd'])){
                 $pwd=password_hash($_POST['pwd'], PASSWORD_DEFAULT); // pour hasher mdp
-                $nom=htmlspecialchars($_POST['Nom']); // enleve tous caractere speciaux
+                $nom=htmlspecialchars($_POST['nom']); // enleve tous caractere speciaux
                 $token=bin2hex(random_bytes(16)); //creer token, BIN2HEX EN BINAIRE, 16 caracteres
-                $Prenom=htmlspecialchars($_POST['Prenom']);
-                $Adresse_postale=htmlspecialchars($_POST['Adresse_postale']);
+                $prenom=htmlspecialchars($_POST['prenom']);
+                $adresse_postale=htmlspecialchars($_POST['adresse_postale']);
                 $code_postale=htmlspecialchars($_POST['code_postale']);
-                $N_de_telephone=preg_match("%[\d{10}]%",$_POST['N_de_telephone']);
-                $Date_de_naissance=date($_POST['Date_de_naissance']);
-                $Sexe=filter_var(($_POST['Sexe']), FILTER_VALIDATE_INT);
-                $Ville=htmlspecialchars($_POST['Ville']);
+               if (preg_match("%[\d{10}]%",$_POST['n_de_telephone'])) $n_de_telephone =$_POST['n_de_telephone'];
+                $date_de_naissance=date($_POST['date_de_naissance']);
+                $sexe=filter_var(($_POST['sexe']), FILTER_VALIDATE_INT);
+                $ville=htmlspecialchars($_POST['ville']);
                 try {
                     $db = connect();
-                    $query=$db->prepare('INSERT INTO Utilisateur (email, Nom, password, token, Prenom, Adresse_postale, code_postale, N_de_telephone, Date_de_naissance, Sexe, Ville) VALUES (:email, :nom, :pwd, :token, :Prenom, :Adresse_postale, :code_postale, :N_de_telephone, :Date_de_naissance, :Sexe, :Ville)');
-                    $query->execute(['email'=> $email, 'Nom'=> $nom , 'pwd'=> $pwd, 'token'=> $token, 'Prenom'=> $Prenom, 'Adresse_postale'=> $Adresse_postale,'code_postale'=> $code_postale, 'N_de_telephone'=> $N_de_telephone, 'Date_de_naissance'=> $Date_de_naissance, 'Sexe'=> $Sexe,'Ville'=> $Ville]);
+                    $query=$db->prepare('INSERT INTO Utilisateur (email, nom, password, token, prenom, adresse_postale, code_postale, n_de_telephone, date_de_naissance, sexe, ville) VALUES (:email, :nom, :pwd, :token, :prenom, :adresse_postale, :code_postale, :n_de_telephone, :date_de_naissance, :sexe, :ville)');
+                    $query->execute(['email'=> $email, 'nom'=> $nom , 'pwd'=> $pwd, 'token'=> $token, 'prenom'=> $prenom, 'adresse_postale'=> $adresse_postale,'code_postale'=> $code_postale, 'n_de_telephone'=> $n_de_telephone, 'date_de_naissance'=> $date_de_naissance, 'sexe'=> $sexe,'ville'=> $ville]);
                     if ($query->rowCount()){
                         $content="<p><a href='localhost/authentification?p=activation&t=$token'>Merci de cliquer sur ce lien afin activer votre compte</a></p>";
                         // Pour envoyer un mail HTML, l'en-tête Content-type doit être défini
@@ -111,6 +113,7 @@ function addUser() {
 }
 
 function logUser() {
+    
     $email=filter_var(filter_input(INPUT_POST, "email", FILTER_SANITIZE_EMAIL), FILTER_VALIDATE_EMAIL);
     $user=getUserByEmail($email);
     if($user){
@@ -118,8 +121,8 @@ function logUser() {
             if($user['actif']){
                 $_SESSION['is_login']=true;
                 $_SESSION['is_actif']=$user['actif'];
-                $_SESSION['id']=$user['id'];
-                return array("success", "Connexion réussie :)");               
+                $_SESSION['id_utilisateur']=$user['id_utilisateur'];
+                return array("success", "Connexion réussie avec l'utilisateur :".$_SESSION['id_utilisateur']);               
             }else return array("error", "Veuillez activer votre compte");
         }else return array("error", "Mauvais identifiants");
     }else return array("error", "Mauvais identifiants");
@@ -205,7 +208,7 @@ function resetPwd() {
 function addannonce() {
     $email=filter_var(filter_input(INPUT_POST, "email", FILTER_SANITIZE_EMAIL), FILTER_VALIDATE_EMAIL);// FILTRE adresse email, email n'existe pas il a le droit de s'inscrire
     if(!getUserByEmail($email)){
-        if ((!isset($_POST["Nom"] ))||(!isset($_POST['pwd']))||(!isset($_POST['Prenom']))||(!isset($_POST['Adresse_postale']))||(!isset($_POST['code_postale']))||(!isset( $_POST['N_de_telephone']))||(!isset( $_POST['Date_de_naissance']))||(!isset( $_POST['Sexe']))||(!isset( $_POST['Ville']))) return array ("error", "tous les champs sont requis");
+        if ((!isset($_POST["nom"] ))||(!isset($_POST['pwd']))||(!isset($_POST['prenom']))||(!isset($_POST['adresse_postale']))||(!isset($_POST['code_postale']))||(!isset( $_POST['n_de_telephone']))||(!isset( $_POST['date_de_naissance']))||(!isset( $_POST['sexe']))||(!isset( $_POST['Ville']))) return array ("error", "tous les champs sont requis annonce");
         if ($_POST['pwd']===$_POST['pwd2']){
             if(preg_match("/^(?=.*\d)(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[\W]).{8,}$/", $_POST['pwd'])){
                 $pwd=password_hash($_POST['pwd'], PASSWORD_DEFAULT); // pour hasher mdp
@@ -243,11 +246,11 @@ function addannonce() {
 
 
    
-    function prixannonce() {
+    function prix_annonce() {
         Global $prix_total;
         if (isset($_POST["nbrs_mois"])) {
             $nbrs_mois = $_POST["nbrs_mois"];
-    
+   
             if ($nbrs_mois >= 1 && $nbrs_mois <= 3) {
                 $prix_total= $nbrs_mois * 10;
             } elseif ($nbrs_mois >= 4 && $nbrs_mois <= 7) {
@@ -255,13 +258,13 @@ function addannonce() {
             } elseif ($nbrs_mois >= 8 && $nbrs_mois <= 12) {
                 $prix_total= $nbrs_mois * 7;
             } else {
-                echo "Veuillez sélectionner un nombre de mois entre 1 et 12.";
+                return array("error","Veuillez sélectionner un nombre de mois entre 1 et 12.");
             }
         } else {
-            echo "Veuillez sélectionner le nombre de mois d'apparition de l'annonce.";
-        }
+            return array("error", "Veuillez sélectionner le nombre de mois d'apparition de l'annonce.");
+        } 
+        return array("success", "Voici votre devis", $prix_total."euros pour ".$nbrs_mois." mois en ligne. Date de fin de la publication :" .date('d-m-Y', time()) );
     }
 
 
-    function prixtotal() {
-        Global $prix_total;
+   

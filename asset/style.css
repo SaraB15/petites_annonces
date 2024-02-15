@@ -1,4 +1,4 @@
-body{
+/* body{
 	margin: 0;
 	padding: 0;
 	display: flex;
@@ -49,7 +49,7 @@ input{
 	background: #e0dede;
 	justify-content: center;
 	/*display: flex;*/
-	margin: 20px auto;
+	/*margin: 20px auto;
 	padding: 10px;
 	border: none;
 	outline: none;
@@ -120,4 +120,4 @@ form{
 
 #showPassword {
 	margin-left: 8px;
-}
+}*/

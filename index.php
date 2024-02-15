@@ -1,16 +1,14 @@
 <?php
+
 session_start();
+
 require_once "model/functions.php";
 
 
 $p= $_GET['p'] ?? ""; // parametre URL p
-
 if($_SERVER["REQUEST_METHOD"] === "POST"){
 	$action= $_POST['action'] ?? "";
 	switch ($action){
-		case 'signup':
-			$message=addUser();
-			break;
 		case 'creation_annonce':
 			$message=addannonce();
 			break;
@@ -18,18 +16,15 @@ if($_SERVER["REQUEST_METHOD"] === "POST"){
 			$message=logUser();
 			$p="home";
 			break;
-		case 'forgot':
-			$message=waitReset();
-			$p="home";
-			break;
-		case 'reset':
-			$message=resetPwd();
-			$p="signup";
+		case 'creation_devis':
+			$message= prix_annonce();
+			
 	}
 }
 
 if ($p=='activation')
 		$message=activUser(); 
+
 if ($p=='deconnect'){
 	session_unset();
 	session_destroy();
@@ -43,21 +38,26 @@ if ($p=='reset' && !isset($_GET['t'])){
 $logged = $_SESSION['is_login'] ?? false;
 
 include "view/header.php"; // AU DE PAGE HTML
-switch ($p) {
-	case 'forgot':
-		include "view/forgot.php";	
-		break;	
-	case 'reset':
-		$token=htmlspecialchars($_GET['t']);
-		include "view/reset.php";	
-		break;	
-	case 'signup':
-		include "view/signup.php";	
-		break;
-	case 'creation_annonce':
-		include "view/creation_annonce.php";	
-		break;
-	default:
-		include "view/home.php";	
-}
+
+?>
+
+<div class="main">  	
+	<div class="home">
+		<?php if (!$logged):?>
+		<a class="button" href="signup.php">Créer un compte</a>
+		<a class="button" href="Connexion.php">Se connecter</a>
+		<?php else:?>
+		<?php $_POST['nom']." ".$_POST['prenom']?>
+		
+		<a class="button" href="creation_annonce.php">Créer une annonce</a>
+		<a class="button" href="?p=deconnect">Se déconnecter</a>
+		<?php endif;?>
+	</div>
+</div>
+	
+
+<?php
+
 include "view/footer.php";
+
+?>

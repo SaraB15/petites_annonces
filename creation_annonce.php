@@ -12,24 +12,34 @@
 </script>
 </head> -->
 
+<?php
+session_start();
+
+require_once "model/functions.php";
+
+	if($_SERVER["REQUEST_METHOD"] === "POST"){
+		$message=addannonce();
+		}
+		include "view/header.php";
+	?>
+
 
 
 
 <div class="main">  	
-	<input type="checkbox" id="chk2" aria-hidden="true">
 	<div class="formulaire_inscription">
 		<form method="POST" action="">
-			<label class="maj" for="chk2" aria-hidden="true">Création annonce</label>
-			<input type="hidden" name="action" value="creation_annonce">
+			<p>Création annonce<p>
+			<input type="hidden" name="action" value="<?= ($message[2]) ? 'creation_annonce': 'creation_devis' ?>"> <!-- raccourci echo si le message =2 alors tu mets dans creation annonce : else tu vas dans creation devis -->
 
 			<label for="titre_annonce">Titre de l'annonce</label>
-			<input type="text" id="titre_annonce" name="titre_annonce" placeholder="Titre de l'annonce Exemple:A Vendre Peugeot 2008" required><br> 
+			<input type="text" id="titre_annonce" name="titre_annonce" placeholder="Titre de l'annonce Exemple:A Vendre Peugeot 2008" value="<?= $_POST["titre_annonce"] ?? ""?>" required><br> <!-- si le value permet de garder les données pre remplit en cas denvoi du fichier POST -->
 			
 			<label for="description">Description</label>
 			<br> <br> 
-			<textarea id="description" name="description" maxlength=1000 placeholder="Description de l'article Exemple: Véhicule entretenue chez Peugeot. CT vierge... Maximum 1000 lettres" required></textarea>S
+			<textarea id="description" name="description" maxlength=1000 placeholder="Description de l'article Exemple: Véhicule entretenue chez Peugeot. CT vierge... Maximum 1000 lettres" value="<?= $_POST["description"] ?? ""?>" required></textarea>
 			<br><br> <br> 
-			<!--<input type="text" name="Date de fin de la publication" min=<?php date('d-m-Y', time()); ?> required> -->
+			
 			<label for="nbrs_mois">Selectionner le nombre(s) de mois que vous souhaitez que votre annonce soit visible (maximum 12 mois) :</label>
 			<br> <br> 
     		<select id="nbrs_mois" name="nbrs_mois" onchange="prixannonce()" required> 
@@ -50,7 +60,7 @@
 			<br><br>
 
 			<label for="Prix_vente">Prix de vente</label>
-			<input type="Number" name="Prix_vente" id="Prix_vente" placeholder="Saisir un chiffre" Min="1" Step="10" Max="1000" required>
+			<input type="Number" name="Prix_vente" id="Prix_vente" placeholder="Saisir un chiffre" Min="1" Step="10" Max="1000" value="<?= $_POST["Prix_vente"] ?? ""?>" required>
 			<br><br>
 			
 			<fieldset> 
@@ -62,25 +72,16 @@
 				<br><button type="button" onclick="prixannonce()">Mettre à jour le prix</button><br>
 			<fieldset> 
 				<legend>Prix de l'annonce</legend>
-			<?php prixannonce(); ?>
+			<?php echo $message[2]; ?>
 			</Fieldset>
-
-			<label>Cout total</label>
-			<?php prixtotal(); ?>
-
-			$prix_total +
-
-
-
-
-			<p> Vous êtes :</p>
-			<input type="radio" id="Homme" name="Sexe" value="1" >  <!-- Mettre le meme nom permet de faire un choix -->
-			<label for="Homme"> Homme </label>
-			<input type="radio" id="Femme" name="Sexe" value="0">
-			<label for="Femme"> Femme </label><br> 
-			
-			
 			<button>Enregistrement</button>
     </form>
 	</div>
 </div>
+
+
+
+
+<?php
+include "view/footer.php";
+?>
