@@ -36,36 +36,18 @@ require_once "model/functions.php";
 			<label for="pwd"> Mot de passe </label>
 			<input type="password" id="pwd" name="pwd" placeholder="Mot de passe" required pattern="^(?=.*\d)(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[\W]).{8,}$" title="Le mot de passe doit comporter au moins 8 caractères dont au moins 1 chiffre, 1 minuscule, 1 majuscule et 1 caractères spécial">
 			<input type="password" id="pwd2" name="pwd2" placeholder="Confirmation du mot de passe" required pattern="^(?=.*\d)(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[\W]).{8,}$" title="Le mot de passe doit comporter au moins 8 caractères dont au moins 1 chiffre, 1 minuscule, 1 majuscule et 1 caractères spécial">
-			<!--<label for="showPassword">Afficher le Mot de Passe :</label>
-       		<input type="checkbox" id="showPassword" onclick="togglePasswordVisibility()">-->
 			<button>Enregistrement</button>
 			<a href="Connexion.php">Se connecter</a>
 
 			
     </form>
 			
-			<!-- <script>
-        function togglePasswordVisibility() {
-            var passwordInput = document.getElementById('password');
-            var showPasswordCheckbox = document.getElementById('showPassword');
-
-            // Change the input type based on the checkbox state
-            passwordInput.type = showPasswordCheckbox.checked ? 'text' : 'password';
-        }
-    </script>-->
+		
 			
 		                         <!-- MP:    12345678Aa@   -->
 
 
-								 <!-- chatgpt 
-			<label for="showPassword">Afficher le Mot de Passe :</label>
-       		<input type="checkbox" id="showPassword" onclick="togglePasswordVisibility()">  
-	 <script>
-
-            // Change the input type based on the checkbox state
-            passwordInput.type = showPasswordCheckbox.checked ? 'text' : 'password';
-        }
-    </script>-->
+			
 	</div>
 
 	

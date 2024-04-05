@@ -6,11 +6,11 @@ function connect() {
     $hostname = 'localhost'; // adresse serveur
 
     // nom de la base de données
-    $dbname = 'petites_annonces';
+    $dbname = 'projet_petites_annonces';
 
     // identifiant et mot de passe de connexion à la BDD
     $username = 'root'; // VOIR SUR XAMP comment je suis connectée avec avec l'ordinateur 
-    $password = 'root';
+    $password = '';
     
     // Création du DSN (data source name) en combinant le type de BDD, l'hôte et le nom de la BDD
     $dsn = "mysql:host=$hostname;dbname=$dbname";//verifie que je suis en sql
@@ -122,10 +122,13 @@ function logUser() {
                 $_SESSION['is_login']=true;
                 $_SESSION['is_actif']=$user['actif'];
                 $_SESSION['id_utilisateur']=$user['id_utilisateur'];
+                $_SESSION['nom']=$user['nom'];
+                $_SESSION['prenom']=$user['prenom'];
+                $_SESSION['ville']=$user['ville'];
                 return array("success", "Connexion réussie avec l'utilisateur :".$_SESSION['id_utilisateur']);               
             }else return array("error", "Veuillez activer votre compte");
-        }else return array("error", "Mauvais identifiants");
-    }else return array("error", "Mauvais identifiants");
+        }else return array("error", "Mauvais identifiants ou Mot de passe");
+    }else return array("error", "Mauvais identifiants ou Mot de passe");
 }
 
 function activUser() {
@@ -206,65 +209,89 @@ function resetPwd() {
 // Récupération d'une annonce
 
 function addannonce() {
-    $email=filter_var(filter_input(INPUT_POST, "email", FILTER_SANITIZE_EMAIL), FILTER_VALIDATE_EMAIL);// FILTRE adresse email, email n'existe pas il a le droit de s'inscrire
-    if(!getUserByEmail($email)){
-        if ((!isset($_POST["nom"] ))||(!isset($_POST['pwd']))||(!isset($_POST['prenom']))||(!isset($_POST['adresse_postale']))||(!isset($_POST['code_postale']))||(!isset( $_POST['n_de_telephone']))||(!isset( $_POST['date_de_naissance']))||(!isset( $_POST['sexe']))||(!isset( $_POST['Ville']))) return array ("error", "tous les champs sont requis annonce");
-        if ($_POST['pwd']===$_POST['pwd2']){
-            if(preg_match("/^(?=.*\d)(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[\W]).{8,}$/", $_POST['pwd'])){
-                $pwd=password_hash($_POST['pwd'], PASSWORD_DEFAULT); // pour hasher mdp
-                $nom=htmlspecialchars($_POST['Nom']); // enleve tous caractere speciaux
-                $token=bin2hex(random_bytes(16)); //creer token, BIN2HEX EN BINAIRE, 16 caracteres
-                $Prenom=htmlspecialchars($_POST['Prenom']);
-                $Adresse_postale=htmlspecialchars($_POST['Adresse_postale']);
-                $code_postale=htmlspecialchars($_POST['code_postale']);
-                $N_de_telephone=preg_match("%[\d{10}]%",$_POST['N_de_telephone']);
-                $Date_de_naissance=date($_POST['Date_de_naissance']);
-                $Sexe=filter_var(($_POST['Sexe']), FILTER_VALIDATE_INT);
-                $Ville=htmlspecialchars($_POST['Ville']);
-                try {
-                    $db = connect();
-                    $query=$db->prepare('INSERT INTO Utilisateur (email, Nom, password, token, Prenom, Adresse_postale, code_postale, N_de_telephone, Date_de_naissance, Sexe, Ville) VALUES (:email, :nom, :pwd, :token, :Prenom, :Adresse_postale, :code_postale, :N_de_telephone, :Date_de_naissance, :Sexe, :Ville)');
-                    $query->execute(['email'=> $email, 'Nom'=> $nom , 'pwd'=> $pwd, 'token'=> $token, 'Prenom'=> $Prenom, 'Adresse_postale'=> $Adresse_postale,'code_postale'=> $code_postale, 'N_de_telephone'=> $N_de_telephone, 'Date_de_naissance'=> $Date_de_naissance, 'Sexe'=> $Sexe,'Ville'=> $Ville]);
-                    if ($query->rowCount()){
-                        $content="<p><a href='localhost/authentification?p=activation&t=$token'>Merci de cliquer sur ce lien afin activer votre compte</a></p>";
-                        // Pour envoyer un mail HTML, l'en-tête Content-type doit être défini
-                        $headers = array(
-                            'MIME-Version' => '1.0',
-                            'Content-type' => 'text/html; charset=iso-8859-1',
-                            'X-Mailer' => 'PHP/' . phpversion()
-                        );// ENVOI MAIL AVEC INFORMATION
-                        mail($email,"Veuillez activer votre compte", $content, $headers);
-                        return array("success", "Inscription réussi. Vous allez recevoir un mail pour activer votre compte");
-                    }else return array("error", "Problème lors de enregistrement");
-                } catch (Exception $e) {
-                    return array("error",  $e->getMessage());
-                } 
-            }else return array("error", "Le mot de passe doit comporter au moins 8 caractères dont au moins 1 chiffre, 1 minuscule, 1 majuscule et 1 caractère spécial");
-        }else return array("error", "Les 2 saisies de mot de passes doivent être identique.");
-    }else return array("error", "Un compte existe déjà pour cet email.");
-}
-
-
-   
-    function prix_annonce() {
-        Global $prix_total;
-        if (isset($_POST["nbrs_mois"])) {
-            $nbrs_mois = $_POST["nbrs_mois"];
-   
-            if ($nbrs_mois >= 1 && $nbrs_mois <= 3) {
-                $prix_total= $nbrs_mois * 10;
-            } elseif ($nbrs_mois >= 4 && $nbrs_mois <= 7) {
-                $prix_total= $nbrs_mois * 8.5;
-            } elseif ($nbrs_mois >= 8 && $nbrs_mois <= 12) {
-                $prix_total= $nbrs_mois * 7;
+    $logged = $_SESSION['is_login'] ?? false;// vérifie qu'il est connecté
+    if (!$logged) {
+        $id_utilisateur=$_SESSION['id_utilisateur']=$user['id_utilisateur'];
+        $titre_annonce=htmlspecialchars($_POST['titre_annonce']); // enleve tous caractere speciaux
+        $id_categorie=filter_var(($_POST['categorie']), FILTER_VALIDATE_INT);
+        $description=htmlspecialchars($_POST['description']);
+        $ville=$_SESSION['ville']=$user['ville'];
+        $duree_de_la_publication_en_mois=filter_var(($_POST['nbrs_mois']), FILTER_VALIDATE_INT);
+        $prix_vente=filter_var(($_POST['prix_vente']), FILTER_VALIDATE_INT);
+        $date_du_jour = time(); 
+        $date_de_fin = strtotime("$duree_de_la_publication_en_mois month");
+            if ($duree_de_la_publication_en_mois >= 1 && $duree_de_la_publication_en_mois <= 3) {
+                $prix_total= $duree_de_la_publication_en_mois * 10;
+            } elseif ($duree_de_la_publication_en_mois >= 4 && $duree_de_la_publication_en_mois <= 7) {
+                $prix_total= $duree_de_la_publication_en_mois * 8.5;
+            } elseif ($duree_de_la_publication_en_mois >= 8 && $duree_de_la_publication_en_mois <= 12) {
+                $prix_total= $duree_de_la_publication_en_mois * 7;
             } else {
                 return array("error","Veuillez sélectionner un nombre de mois entre 1 et 12.");
             }
         } else {
             return array("error", "Veuillez sélectionner le nombre de mois d'apparition de l'annonce.");
-        } 
-        return array("success", "Voici votre devis", $prix_total."euros pour ".$nbrs_mois." mois en ligne. Date de fin de la publication :" .date('d-m-Y', time()) );
+        
+                try {
+                    $db = connect();
+                    $query=$db->prepare('INSERT INTO annonces (id_utilisateur, titre_annonce, id_categorie, description, ville, prix_vente, duree_de_publication_en_mois, prix_annonce, date_fin_publication) VALUES (:id_utilisateur, :titre_annonce, :id_categorie, :description, :ville, :prix_vente, :duree_de_publication_en_mois, :prix_annonce, :date_fin_publication)');
+                    $query->execute(['id_utilisateur'=> $id_utilisateur, 'titre_annonce'=> $titre_annonce , 'id_categorie'=> $id_categorie, 'description'=> $description, 'ville'=> $ville, 'prix_vente'=> $prix_vente,'duree_de_publication_en_mois'=> $duree_de_publication_en_mois, 'prix_annonce'=> $prix_annonce, 'date_fin_publication'=> $date_fin_publication]);
+                    if ($query->rowCount()){
+                     return array("success", "Voici votre devis : ". $prix_total." euros pour ".$duree_de_la_publication_en_mois." mois en ligne. Date de début de la publication :" .date('d-m-Y', $date_du_jour)." Date de fin de la publication :".date('d-m-Y', $date_de_fin)."Merci de procéder aux paiements" ,'creation_annonce' ); 
+                    }else return array("error", "Problème lors de enregistrement");
+                } catch (Exception $e) {
+                    return array("error",  $e->getMessage());
+                } 
+        }
     }
+
+
+   
+    
+
+
+
+
+
+
+
+    function activannonce($id_annonce) {  
+        $active_annonce = getAnnonceById($id_annonce);
+        if($active_annonce){
+            if(!$active_annonce['actif']){
+                try {
+                    $db = connect();
+                    $query=$db->prepare('UPDATE annonces SET actif = 1 WHERE id_annonce= :id_annonce');
+                        $query->execute(['id_annonce'=> $id_annonce]);
+                        if ($query->rowCount()){
+                             return array("success", "L'annonce est activée"); 
+                        }else return array("error", "Problème lors de l'activation"); 
+                } catch (Exception $e) {
+                    return array("error",  $e->getMessage());
+                }              
+            }else return array("error", "Cette annonce est déjà active");
+        }else return array("error", "Lien invalide !");
+    }
+
+
+
+    // Récupération d'une annonce à partir d'un id
+function getAnnonceById($id_annonce) {
+    try {
+        $db = connect();
+        $query=$db->prepare('SELECT * FROM annonces WHERE id_annonce= :id_annonce');
+        $query->execute(['id_annonce'=>$id_annonce]);
+        if ($query->rowCount()){
+            // Renvoie toutes les infos de l'annonce
+            return $query->fetch();
+        }
+    } catch (Exception $e) {
+        echo $e->getMessage();
+    } 
+    return false;
+}
+
+    
 
 
    

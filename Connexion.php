@@ -9,7 +9,7 @@ require_once "model/functions.php";
 		include "view/header.php";
 
 	if($_SERVER["REQUEST_METHOD"] === "POST"){
-	echo '<a href='index.php'>Aller à l\'accueil </a>';
+	echo "<a href='index.php'>Aller à l'accueil </a>";
 
 	}
 ?>	
